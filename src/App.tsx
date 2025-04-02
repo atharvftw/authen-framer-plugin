@@ -1,46 +1,70 @@
-import { framer, CanvasNode } from "framer-plugin"
-import { useState, useEffect } from "react"
-import "./App.css"
-
-framer.showUI({
-    position: "top right",
-    width: 240,
-    height: 95,
-})
-
-function useSelection() {
-    const [selection, setSelection] = useState<CanvasNode[]>([])
-
-    useEffect(() => {
-        return framer.subscribeToSelection(setSelection)
-    }, [])
-
-    return selection
-}
+import React, { useState } from 'react';
+import { AuthProvider } from './components/AuthProvider';
+import { LoginForm } from './components/LoginForm';
+import { RegisterForm } from './components/RegisterForm';
+import { OTPVerification } from './components/OTPVerification';
+import { ColorPicker } from './components/ColorPicker';
+import './styles/auth.css';
 
 export function App() {
-    const selection = useSelection()
-    const layer = selection.length === 1 ? "layer" : "layers"
+    const [theme, setTheme] = useState({
+        primary: '#6366f1',
+        secondary: '#8b5cf6',
+        accent: '#ec4899',
+        background: '#f8fafc',
+        text: '#1e293b',
+    });
 
-    const handleAddSvg = async () => {
-        await framer.addSVG({
-            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path fill="#999" d="M20 0v8h-8L4 0ZM4 8h8l8 8h-8v8l-8-8Z"/></svg>`,
-            name: "Logo.svg",
-        })
-    }
+    const handleColorChange = (colorType: string) => (color: string) => {
+        setTheme(prev => ({ ...prev, [colorType]: color }));
+        document.documentElement.style.setProperty(`--${colorType}-color`, color);
+    };
 
     return (
-        <main>
-            <p>
-                Welcome! Check out the{" "}
-                <a href="https://framer.com/developers/plugins/introduction" target="_blank">
-                    Docs
-                </a>{" "}
-                to start. You have {selection.length} {layer} selected.
-            </p>
-            <button className="framer-button-primary" onClick={handleAddSvg}>
-                Insert Logo
-            </button>
-        </main>
-    )
+        <div className="app-container">
+            <div className="theme-controls">
+                <div className="theme-control-group">
+                    <label>Primary Color</label>
+                    <ColorPicker onColorChange={handleColorChange('primary')} initialColor={theme.primary} />
+                </div>
+                <div className="theme-control-group">
+                    <label>Secondary Color</label>
+                    <ColorPicker onColorChange={handleColorChange('secondary')} initialColor={theme.secondary} />
+                </div>
+                <div className="theme-control-group">
+                    <label>Accent Color</label>
+                    <ColorPicker onColorChange={handleColorChange('accent')} initialColor={theme.accent} />
+                </div>
+            </div>
+            <AuthProvider>
+                <div className="auth-container">
+                    <h1>Authentication Demo</h1>
+                    <div className="forms-container">
+                        <div className="form-section">
+                            <h2>Login</h2>
+                            <LoginForm
+                                onSuccess={() => console.log('Login successful')}
+                                onError={(error) => console.error(error)}
+                            />
+                        </div>
+                        <div className="form-section">
+                            <h2>Register</h2>
+                            <RegisterForm
+                                onSuccess={() => console.log('Registration successful')}
+                                onError={(error) => console.error(error)}
+                            />
+                        </div>
+                        <div className="form-section">
+                            <h2>OTP Verification</h2>
+                            <OTPVerification
+                                phoneNumber="+1234567890"
+                                onSuccess={() => console.log('OTP verification successful')}
+                                onError={(error) => console.error(error)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </AuthProvider>
+        </div>
+    );
 }
